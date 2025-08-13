@@ -90,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // 1. Configuraciones personalizables
     final hiddenColumns = [5]; // Índices de columnas a ocultar
-    final centeredColumns = [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]; // Índices de columnas a centrar
+    final centeredColumns = [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]; // Índices de columnas a centrar
 
     // 2. Calcular anchos dinámicos
     final columnWidths = _calculateColumnWidths(_data, hiddenColumns);
