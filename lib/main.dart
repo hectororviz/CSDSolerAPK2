@@ -267,7 +267,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ? const Center(child: CircularProgressIndicator())
                 : Padding(
               padding: const EdgeInsets.all(8.0),
-              child: buildTable(),
+              child: hojaActual == 'home'
+                  ? _buildHomeContent()  // Nuevo método para contenido home
+                  : buildTable(),         // Tabla para las otras hojas
             ),
           ),
         ],
@@ -291,6 +293,37 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  Widget _buildHomeContent() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Próximos Partidos',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 20),
+          // Aquí puedes agregar los widgets personalizados que necesites
+          // Ejemplo:
+          Card(
+            child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Text('Partido 1: Equipo A vs Equipo B'),
+                    Text('Fecha: 15/08/2023'),
+                    Text('Hora: 10:00'),
+                  ],
+                )),
+          ),
+          // Puedes usar los datos de _data si lo necesitas
+          // o crear una estructura diferente para la home
+        ],
+      ),
+    );
+  }
+
 
   String _getTituloPagina(String hojaActual) {
     switch (hojaActual) {
