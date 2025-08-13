@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:csv/csv.dart';
+import 'dart:math' as math;
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Tabla Google Sheets',
+      title: 'CSD Soler',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const HomeScreen(),
       debugShowCheckedModeBanner: false,
@@ -30,7 +31,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // 🔹 Mapeo de nombres de hojas a su GID
+  // Mapeo de nombres de hojas a su GID
   final Map<String, String> hojasGid = {
     'home': '970777381',
     'sabado': '1525215119',
@@ -39,17 +40,16 @@ class _HomeScreenState extends State<HomeScreen> {
     'datos': '1599606612',
   };
 
-  List<List<dynamic>> _data = []; // Aquí guardamos los datos de la hoja
-  bool _loading = false; // Indicador de carga
-  String hojaActual = 'home'; // Hoja que se está mostrando
+  List<List<dynamic>> _data = [];
+  bool _loading = false;
+  String hojaActual = 'home';
 
   @override
   void initState() {
     super.initState();
-    fetchData(hojaActual); // Cargar "home" al inicio
+    fetchData(hojaActual);
   }
 
-  /// 🔹 Descarga y parsea la hoja de Google Sheets en formato CSV
   Future<void> fetchData(String hoja) async {
     setState(() {
       _loading = true;
@@ -57,8 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     final gid = hojasGid[hoja] ?? hojasGid['home']!;
-    final url =
-        'https://docs.google.com/spreadsheets/d/e/2PACX-1vTH5wcJur5ysIqKDdpaRP3M1YDAXVME5Ztuo0zffL27P9crNqlDlbNp3Kg-DSOE9XapLGl9qwUO1hrZ/pub?gid=$gid&output=csv';
+    final url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTH5wcJur5ysIqKDdpaRP3M1YDAXVME5Ztuo0zffL27P9crNqlDlbNp3Kg-DSOE9XapLGl9qwUO1hrZ/pub?gid=$gid&output=csv';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -84,60 +83,183 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  /// 🔹 Widget que muestra la tabla con estilo zebra
   Widget buildTable() {
     if (_data.isEmpty) {
       return const Center(child: Text('No hay datos para mostrar'));
     }
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        headingRowColor:
-        MaterialStateColor.resolveWith((_) => Colors.blue.shade100),
-        columns: _data.first
-            .map((header) => DataColumn(
-          label: Text(
-            header.toString(),
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ))
-            .toList(),
-        rows: List.generate(
-          _data.length - 1,
-              (index) {
-            final row = _data[index + 1];
-            final isOdd = index.isOdd; // Zebra effect
+    // 1. Configuraciones personalizables
+    final hiddenColumns = [5]; // Índices de columnas a ocultar
+    final centeredColumns = [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]; // Índices de columnas a centrar
 
-            return DataRow(
-              color: MaterialStateColor.resolveWith(
-                    (_) => isOdd ? Colors.grey.shade200 : Colors.white,
-              ),
-              cells: row
-                  .map((cell) => DataCell(Text(cell.toString())))
-                  .toList(),
-            );
-          },
+    // 2. Calcular anchos dinámicos
+    final columnWidths = _calculateColumnWidths(_data, hiddenColumns);
+
+    // 3. Widget principal con doble scroll
+    return Scrollbar(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columnSpacing: 4, // Reducido para mejor ajuste
+            headingRowColor: WidgetStateColor.resolveWith((_) => Color(0xFFA70000)),
+            dataRowMinHeight: 30, // Altura personalizada (en píxeles)
+            dataRowMaxHeight: 30, // Altura personalizada (en píxeles)
+            headingRowHeight: 40, // Altura del encabezado
+            columns: _data.first
+                .asMap()
+                .entries
+                .where((entry) => !hiddenColumns.contains(entry.key))
+                .map((entry) {
+              final index = entry.key;
+              final isCentered = centeredColumns.contains(index);
+              return DataColumn(
+                label: SizedBox(
+                  width: columnWidths[index],
+                  child: Center(
+                    child: Text(
+                      entry.value.toString(),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              );
+            })
+                .toList(),
+            rows: _buildDynamicRows(_data, hiddenColumns, centeredColumns, columnWidths),
+          ),
         ),
       ),
+    );
+  }
+
+  Map<int, double> _calculateColumnWidths(List<List<dynamic>> data, List<int> hiddenColumns) {
+    final Map<int, double> widths = {};
+    final textStyle = const TextStyle(fontWeight: FontWeight.normal);
+    final padding = 16.0; // Padding horizontal adicional
+
+    if (data.isEmpty) return widths;
+
+    // Calcular el ancho máximo para cada columna
+    for (int col = 0; col < data.first.length; col++) {
+      if (hiddenColumns.contains(col)) continue;
+
+      double maxWidth = 0;
+
+      // Considerar el encabezado
+      final headerWidth = _textWidth(data.first[col].toString(), textStyle) + padding;
+      maxWidth = math.max(maxWidth, headerWidth);
+
+      // Considerar todas las celdas de la columna
+      for (int row = 1; row < data.length; row++) {
+        if (col >= data[row].length) continue;
+        final cellWidth = _textWidth(data[row][col].toString(), textStyle) + padding;
+        maxWidth = math.max(maxWidth, cellWidth);
+      }
+
+      // Establecer un mínimo y máximo razonable
+      widths[col] = math.max(20, math.min(maxWidth, 200)); // Entre 40 y 200 pixeles
+    }
+
+    return widths;
+  }
+
+  double _textWidth(String text, TextStyle style) {
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(text: text, style: style),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return textPainter.width;
+  }
+
+  List<DataRow> _buildDynamicRows(
+      List<List<dynamic>> data,
+      List<int> hiddenColumns,
+      List<int> centeredColumns,
+      Map<int, double> columnWidths
+      ) {
+    return List.generate(data.length - 1, (rowIndex) {
+      final row = data[rowIndex + 1];
+      final isOdd = rowIndex.isOdd;
+
+      return DataRow(
+        color: WidgetStateColor.resolveWith(
+              (_) => isOdd ? Colors.grey.shade200 : Colors.white,
+        ),
+        cells: row
+            .asMap()
+            .entries
+            .where((entry) => !hiddenColumns.contains(entry.key))
+            .map((entry) {
+          final index = entry.key;
+          final cellValue = entry.value.toString();
+          final isCentered = centeredColumns.contains(index);
+          final width = columnWidths[index] ?? 100; // Default 100 si hay algún error
+
+          return DataCell(
+            Container(
+              color: _getCellColor(cellValue),
+              padding: const EdgeInsets.all(4),
+              width: width,
+              child: SizedBox(
+                width: width,
+                child: isCentered
+                    ? Center(child: _buildCellText(cellValue))
+                    : _buildCellText(cellValue),
+              ),
+            ),
+          );
+        })
+            .toList(),
+      );
+    });
+  }
+
+// Helper para colores de celda
+  Color _getCellColor(String value) {
+    if (value == 'P') return Colors.red.shade100;
+    if (value == 'G') return Colors.green.shade100;
+    if (value == 'E') return Colors.yellow.shade100;
+    return Colors.transparent;
+  }
+
+// Helper para texto de celda
+  Widget _buildCellText(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontWeight: ['P', 'G', 'E'].contains(text) ? FontWeight.bold : FontWeight.normal,
+      ),
+      overflow: TextOverflow.ellipsis,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Hoja: $hojaActual'),
-        centerTitle: true,
-      ),
       body: Column(
         children: [
-          // 🔹 Escudo del club en la parte superior
           Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Image.asset(
-              'assets/escudo.png',
-              height: 80,
+            padding: const EdgeInsets.fromLTRB(8, 30, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _getTituloPagina(hojaActual),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                Image.asset(
+                  'assets/escudo.png',
+                  height: 80,
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -150,28 +272,40 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      // 🔹 Barra de botones para cambiar de hoja
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: [
-          'home',
-          'sabado',
-          'domingo',
-          'femenino',
-          'datos'
-        ].indexOf(hojaActual),
+        currentIndex: ['home', 'sabado', 'domingo', 'femenino', 'datos']
+            .indexOf(hojaActual),
         onTap: (index) {
           final hoja = ['home', 'sabado', 'domingo', 'femenino', 'datos'][index];
           fetchData(hoja);
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Sábado'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today), label: 'Sábado'),
           BottomNavigationBarItem(icon: Icon(Icons.event), label: 'Domingo'),
           BottomNavigationBarItem(icon: Icon(Icons.female), label: 'Femenino'),
           BottomNavigationBarItem(icon: Icon(Icons.info), label: 'Datos'),
         ],
       ),
     );
+  }
+
+  String _getTituloPagina(String hojaActual) {
+    switch (hojaActual) {
+      case 'home':
+        return 'Proximos partidos';
+      case 'sabado':
+        return 'Futbol Infantil - Sabados';
+      case 'domingo':
+        return 'Futbol Infantil - Domingos';
+      case 'femenino':
+        return 'Futbol Femenino';
+      case 'datos':
+        return 'Proximamente - Estadisticas';
+      default:
+        return 'Club Deportivo';
+    }
   }
 }
