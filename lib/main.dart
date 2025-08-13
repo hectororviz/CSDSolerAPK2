@@ -24,19 +24,37 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 1200), // Duración total
       vsync: this,
     );
 
-    _scaleAnimation = CurvedAnimation(
-        parent: _controller,
-        curve: Curves.bounceOut, // ← ¡Cambia esta curva!
-    );
+    // Configuración de la animación en tres fases
+    _scaleAnimation = TweenSequence([
+      // Fase 1: Aparece pequeño y crece rápidamente (0ms - 400ms)
+      TweenSequenceItem(
+        tween: Tween(begin: 0.1, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOutQuart)),
+        weight: 0.33,
+      ),
+      // Fase 2: Pausa (400ms - 900ms)
+      TweenSequenceItem(
+        tween: Tween(begin: 1.0, end: 1.0),
+        weight: 0.42,
+      ),
+      // Fase 3: Explosión final (900ms - 1200ms)
+      TweenSequenceItem(
+        tween: Tween(begin: 1.0, end: 15.0)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 0.25,
+      ),
+    ]).animate(_controller);
 
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
+    // Navegar al HomeScreen después de 1300ms (un poco después de la animación)
+    Future.delayed(const Duration(milliseconds: 1300), () {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
@@ -52,12 +70,29 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF000000),
-      body: Center(
-        child: ScaleTransition(
-          scale: _scaleAnimation,
-          child: Image.asset('assets/escudo.png', width: 200),
-        ),
+      backgroundColor: Colors.black,
+      body: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          // Cuando la escala sea muy grande, mostramos solo negro
+          if (_scaleAnimation.value > 5.0) {
+            return Container(color: Colors.black);
+          }
+
+          return Center(
+            child: Transform.scale(
+              scale: _scaleAnimation.value,
+              child: Image.asset(
+                'assets/escudo.png',
+                width: 200,
+                // Opcional: Efecto de desvanecimiento en la última fase
+                opacity: AlwaysStoppedAnimation(
+                    _controller.value < 0.8 ? 1.0 : 1.0 - (_controller.value - 0.8) * 5
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
