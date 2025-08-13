@@ -295,40 +295,154 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomeContent() {
-    return Center(
+    // Verificar si hay datos disponibles
+    if (_data.isEmpty || _data.length < 2) {
+      return const Center(child: Text('No hay datos de próximos partidos'));
+    }
+
+    // Obtener los encabezados de las primeras 4 columnas
+    final headers = _data.isNotEmpty
+        ? _data[0].sublist(0, 4)
+        : ['Dia', 'Fecha', 'Localia', 'Rival'];
+
+    // Obtener las filas de datos (asumiendo que cada categoría tiene su fila)
+    final femeninoData = _data.length > 1 ? _data[1] : [];
+    final sabadosData = _data.length > 2 ? _data[2] : [];
+    final domingosData = _data.length > 3 ? _data[3] : [];
+
+    return SingleChildScrollView(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
+          const SizedBox(height: 16),
+          const Text(
             'Próximos Partidos',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 20),
-          // Aquí puedes agregar los widgets personalizados que necesites
-          // Ejemplo:
-          Card(
-            child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Text('Partido 1: Equipo A vs Equipo B'),
-                    Text('Fecha: 15/08/2023'),
-                    Text('Hora: 10:00'),
-                  ],
-                )),
+          const SizedBox(height: 20),
+
+          // Tarjeta Fútbol Femenino - Color rosa claro
+          _buildMatchCard(
+            title: 'Fútbol Femenino',
+            headers: headers,
+            data: femeninoData,
+            backgroundColor: Colors.pink[50]!,
           ),
-          // Puedes usar los datos de _data si lo necesitas
-          // o crear una estructura diferente para la home
+
+          const SizedBox(height: 16),
+
+          // Tarjeta Fútbol Infantil - Sábados - Color azul claro
+          _buildMatchCard(
+            title: 'Fútbol Infantil - Sábados',
+            headers: headers,
+            data: sabadosData,
+            backgroundColor: Colors.green[50]!,
+          ),
+
+          const SizedBox(height: 16),
+
+          // Tarjeta Fútbol Infantil - Domingos - Color verde claro
+          _buildMatchCard(
+            title: 'Fútbol Infantil - Domingos',
+            headers: headers,
+            data: domingosData,
+            backgroundColor: Colors.blue[50]!,
+          ),
+
+          const SizedBox(height: 16),
         ],
       ),
     );
   }
+// Widget auxiliar para construir las tarjetas de partido
+  Widget _buildMatchCard({required String title, required List<dynamic> headers, required List<dynamic> data, Color backgroundColor = Colors.white, }) {
+    return Card(
+      elevation: 4,
+      color: backgroundColor, // Aquí aplicamos el color de fondo
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFA70000), // Color rojo similar al del header
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
 
+            // Encabezados
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildHeaderCell(headers[0].toString()),
+                _buildHeaderCell(headers[1].toString()),
+                _buildHeaderCell(headers[2].toString()),
+                _buildHeaderCell(headers[3].toString()),
+              ],
+            ),
+
+            const Divider(height: 24, thickness: 1),
+
+            // Datos
+            if (data.isNotEmpty && data.length >= 4)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildDataCell(data[0].toString()),
+                  _buildDataCell(data[1].toString()),
+                  _buildDataCell(data[2].toString()),
+                  _buildDataCell(data[3].toString()),
+                ],
+              )
+            else
+              const Text('No hay datos disponibles',
+                style: TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+// Widget auxiliar para celdas de encabezado
+  Widget _buildHeaderCell(String text) {
+    return Expanded(
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
+        textAlign: TextAlign.center,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+// Widget auxiliar para celdas de datos
+  Widget _buildDataCell(String text) {
+    return Expanded(
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: text.isEmpty ? Colors.grey : Colors.black,
+          fontStyle: text.isEmpty ? FontStyle.italic : FontStyle.normal,
+        ),
+      ),
+    );
+  }
 
   String _getTituloPagina(String hojaActual) {
     switch (hojaActual) {
       case 'home':
-        return 'Proximos partidos';
+        return 'Club Social y Deportivo Soler';
       case 'sabado':
         return 'Futbol Infantil - Sabados';
       case 'domingo':
