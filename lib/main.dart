@@ -7,6 +7,62 @@ void main() {
   runApp(const MyApp());
 }
 
+// 1. Añade este nuevo widget ANTES de MyApp
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+
+    _scaleAnimation = CurvedAnimation(
+        parent: _controller,
+        curve: Curves.bounceOut, // ← ¡Cambia esta curva!
+    );
+
+    _controller.forward();
+
+    Future.delayed(const Duration(seconds: 3), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF000000),
+      body: Center(
+        child: ScaleTransition(
+          scale: _scaleAnimation,
+          child: Image.asset('assets/escudo.png', width: 200),
+        ),
+      ),
+    );
+  }
+}
+
 /// App principal
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -16,7 +72,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'CSD Soler',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const HomeScreen(),
+      home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
