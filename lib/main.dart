@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:csv/csv.dart';
 import 'dart:math' as math;
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +16,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CSD Soler',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(
+          primarySwatch: Colors.blue,
+          textTheme: GoogleFonts.robotoTextTheme( // Opción con Google Fonts
+            Theme.of(context).textTheme,
+          ),
+      ),
       home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
@@ -660,7 +666,7 @@ Widget _buildTituloClub({
     children: [
       Text(
         'Club Social y Deportivo',
-        style: TextStyle(
+        style: GoogleFonts.roboto( // Estilo específico
           fontSize: 15, // Reducido ligeramente
           fontWeight: FontWeight.w400,
           color: colorSuperior,
@@ -671,9 +677,9 @@ Widget _buildTituloClub({
       SizedBox(height: separacion), // Acepta valores como -2, -4, etc.
       Text(
         'SOLER',
-        style: TextStyle(
+        style: GoogleFonts.roboto( // Roboto con peso negro
           fontSize: 72,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w900, // Black weight
           color: colorInferior,
           height: 0.8, // Compacta el espacio vertical del texto
           shadows: sombra,
