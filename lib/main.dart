@@ -7,7 +7,22 @@ void main() {
   runApp(const MyApp());
 }
 
-// 1. Añade este nuevo widget ANTES de MyApp
+/// App principal
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'CSD Soler',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const SplashScreen(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+// SplashScreen
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -17,44 +32,75 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
+  late Animation<double> _bounceAnimation;
 
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1200), // Duración total
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     );
 
-    // Configuración de la animación en tres fases
     _scaleAnimation = TweenSequence([
-      // Fase 1: Aparece pequeño y crece rápidamente (0ms - 400ms)
       TweenSequenceItem(
-        tween: Tween(begin: 0.1, end: 1.0)
+        tween: Tween(begin: 0.1, end: 1.2)
             .chain(CurveTween(curve: Curves.easeOutQuart)),
-        weight: 0.33,
+        weight: 0.3,
       ),
-      // Fase 2: Pausa (400ms - 900ms)
+      TweenSequenceItem(
+        tween: Tween(begin: 1.2, end: 0.9)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 0.1,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 0.9, end: 1.05)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 0.05,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.05, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 0.05,
+      ),
       TweenSequenceItem(
         tween: Tween(begin: 1.0, end: 1.0),
-        weight: 0.42,
+        weight: 0.3,
       ),
-      // Fase 3: Explosión final (900ms - 1200ms)
       TweenSequenceItem(
-        tween: Tween(begin: 1.0, end: 15.0)
+        tween: Tween(begin: 1.0, end: 20.0)
             .chain(CurveTween(curve: Curves.easeIn)),
-        weight: 0.25,
+        weight: 0.2,
+      ),
+    ]).animate(_controller);
+
+    _bounceAnimation = TweenSequence([
+      TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: -30.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 0.3,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: -30.0, end: 15.0)
+            .chain(CurveTween(curve: Curves.bounceOut)),
+        weight: 0.15,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 15.0, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 0.05,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: 0.0),
+        weight: 0.5,
       ),
     ]).animate(_controller);
 
     _controller.forward();
 
-    // Navegar al HomeScreen después de 1300ms (un poco después de la animación)
-    Future.delayed(const Duration(milliseconds: 1300), () {
+    Future.delayed(const Duration(milliseconds: 1600), () {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
@@ -74,41 +120,27 @@ class _SplashScreenState extends State<SplashScreen>
       body: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          // Cuando la escala sea muy grande, mostramos solo negro
           if (_scaleAnimation.value > 5.0) {
             return Container(color: Colors.black);
           }
 
           return Center(
-            child: Transform.scale(
-              scale: _scaleAnimation.value,
-              child: Image.asset(
-                'assets/escudo.png',
-                width: 200,
-                // Opcional: Efecto de desvanecimiento en la última fase
-                opacity: AlwaysStoppedAnimation(
-                    _controller.value < 0.8 ? 1.0 : 1.0 - (_controller.value - 0.8) * 5
+            child: Transform.translate(
+              offset: Offset(0, _bounceAnimation.value),
+              child: Transform.scale(
+                scale: _scaleAnimation.value,
+                child: Opacity(
+                  opacity: _controller.value < 0.8 ? 1.0 : 1.0 - (_controller.value - 0.8) * 5,
+                  child: Image.asset(
+                    'assets/escudo.png',
+                    width: 200,
+                  ),
                 ),
               ),
             ),
           );
         },
       ),
-    );
-  }
-}
-
-/// App principal
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'CSD Soler',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: const SplashScreen(),
-      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -122,7 +154,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Mapeo de nombres de hojas a su GID
   final Map<String, String> hojasGid = {
     'home': '970777381',
     'sabado': '1525215119',
@@ -179,32 +210,29 @@ class _HomeScreenState extends State<HomeScreen> {
       return const Center(child: Text('No hay datos para mostrar'));
     }
 
-    // 1. Configuraciones personalizables
-    final hiddenColumns = [5]; // Índices de columnas a ocultar
-    final centeredColumns = [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]; // Índices de columnas a centrar
+    final hiddenColumns = [5];
+    final centeredColumns = [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 
-    // 2. Calcular anchos dinámicos
     final columnWidths = _calculateColumnWidths(_data, hiddenColumns);
 
-    // 3. Widget principal con doble scroll
     return Scrollbar(
       child: SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: DataTable(
-            columnSpacing: 4, // Reducido para mejor ajuste
-            headingRowColor: WidgetStateColor.resolveWith((_) => Color(0xFFA70000)),
-            dataRowMinHeight: 30, // Altura personalizada (en píxeles)
-            dataRowMaxHeight: 30, // Altura personalizada (en píxeles)
-            headingRowHeight: 40, // Altura del encabezado
+            columnSpacing: 4,
+            headingRowColor: WidgetStateColor.resolveWith((_) => const Color(0xFFA70000)),
+            dataRowMinHeight: 30,
+            dataRowMaxHeight: 30,
+            headingRowHeight: 40,
             columns: _data.first
                 .asMap()
                 .entries
                 .where((entry) => !hiddenColumns.contains(entry.key))
                 .map((entry) {
               final index = entry.key;
-              final isCentered = centeredColumns.contains(index);
+              //final isCentered = centeredColumns.contains(index);
               return DataColumn(
                 label: SizedBox(
                   width: columnWidths[index],
@@ -220,8 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               );
-            })
-                .toList(),
+            }).toList(),
             rows: _buildDynamicRows(_data, hiddenColumns, centeredColumns, columnWidths),
           ),
         ),
@@ -232,29 +259,24 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<int, double> _calculateColumnWidths(List<List<dynamic>> data, List<int> hiddenColumns) {
     final Map<int, double> widths = {};
     final textStyle = const TextStyle(fontWeight: FontWeight.normal);
-    final padding = 16.0; // Padding horizontal adicional
+    final padding = 16.0;
 
     if (data.isEmpty) return widths;
 
-    // Calcular el ancho máximo para cada columna
     for (int col = 0; col < data.first.length; col++) {
       if (hiddenColumns.contains(col)) continue;
 
       double maxWidth = 0;
-
-      // Considerar el encabezado
       final headerWidth = _textWidth(data.first[col].toString(), textStyle) + padding;
       maxWidth = math.max(maxWidth, headerWidth);
 
-      // Considerar todas las celdas de la columna
       for (int row = 1; row < data.length; row++) {
         if (col >= data[row].length) continue;
         final cellWidth = _textWidth(data[row][col].toString(), textStyle) + padding;
         maxWidth = math.max(maxWidth, cellWidth);
       }
 
-      // Establecer un mínimo y máximo razonable
-      widths[col] = math.max(20, math.min(maxWidth, 200)); // Entre 40 y 200 pixeles
+      widths[col] = math.max(20, math.min(maxWidth, 200));
     }
 
     return widths;
@@ -273,8 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
       List<List<dynamic>> data,
       List<int> hiddenColumns,
       List<int> centeredColumns,
-      Map<int, double> columnWidths
-      ) {
+      Map<int, double> columnWidths) {
     return List.generate(data.length - 1, (rowIndex) {
       final row = data[rowIndex + 1];
       final isOdd = rowIndex.isOdd;
@@ -283,15 +304,11 @@ class _HomeScreenState extends State<HomeScreen> {
         color: WidgetStateColor.resolveWith(
               (_) => isOdd ? Colors.grey.shade200 : Colors.white,
         ),
-        cells: row
-            .asMap()
-            .entries
-            .where((entry) => !hiddenColumns.contains(entry.key))
-            .map((entry) {
+        cells: row.asMap().entries.where((entry) => !hiddenColumns.contains(entry.key)).map((entry) {
           final index = entry.key;
           final cellValue = entry.value.toString();
           final isCentered = centeredColumns.contains(index);
-          final width = columnWidths[index] ?? 100; // Default 100 si hay algún error
+          final width = columnWidths[index] ?? 100;
 
           return DataCell(
             Container(
@@ -306,13 +323,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           );
-        })
-            .toList(),
+        }).toList(),
       );
     });
   }
 
-// Helper para colores de celda
   Color _getCellColor(String value) {
     if (value == 'P') return Colors.red.shade100;
     if (value == 'G') return Colors.green.shade100;
@@ -320,7 +335,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Colors.transparent;
   }
 
-// Helper para texto de celda
   Widget _buildCellText(String text) {
     return Text(
       text,
@@ -333,19 +347,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          Padding(
+    return PopScope(
+      canPop: hojaActual == 'home',
+      onPopInvokedWithResult: (bool didPop, Object? result) async {
+        if (didPop) return; // Ya se hizo pop, no hacer nada
+
+        if (hojaActual != 'home') {
+          fetchData("home");
+          return; // No hacemos pop automático
+        }
+
+        final shouldExit = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Salir de la aplicación'),
+            content: const Text('¿Estás seguro que quieres salir?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('Salir'),
+              ),
+            ],
+          ),
+        );
+
+        if (shouldExit == true) {
+          Navigator.of(context).maybePop();
+        }
+      },
+      child: Scaffold(
+        body: Column(
+          children: [
+            Padding(
             padding: const EdgeInsets.fromLTRB(8, 30, 16, 8),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  _getTituloPagina(hojaActual),
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
-                ),
+                _getTituloPagina(hojaActual),  // Ahora devuelve un Widget en lugar de String
                 Image.asset(
                   'assets/escudo.png',
                   height: 80,
@@ -353,50 +395,69 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: hojaActual == 'home'
-                  ? _buildHomeContent()  // Nuevo método para contenido home
-                  : buildTable(),         // Tabla para las otras hojas
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: hojaActual == 'home'
+                    ? _buildHomeContent()
+                    : Column(
+                  children: [
+                    Expanded(child: buildTable()),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () => fetchData('home'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFA70000),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                            ),
+                            child: const Text('Volver', style: TextStyle(color: Colors.white)),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              // Acción para ver más datos
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 12),
+                            ),
+                            child: const Text('Fixture', style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: ['home', 'sabado', 'domingo', 'femenino', 'datos']
-            .indexOf(hojaActual),
-        onTap: (index) {
-          final hoja = ['home', 'sabado', 'domingo', 'femenino', 'datos'][index];
-          fetchData(hoja);
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today), label: 'Sábado'),
-          BottomNavigationBarItem(icon: Icon(Icons.event), label: 'Domingo'),
-          BottomNavigationBarItem(icon: Icon(Icons.female), label: 'Femenino'),
-          BottomNavigationBarItem(icon: Icon(Icons.info), label: 'Datos'),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildHomeContent() {
-    // Verificar si hay datos disponibles
     if (_data.isEmpty || _data.length < 2) {
       return const Center(child: Text('No hay datos de próximos partidos'));
     }
 
-    // Obtener los encabezados de las primeras 4 columnas
     final headers = _data.isNotEmpty
         ? _data[0].sublist(0, 4)
         : ['Dia', 'Fecha', 'Localia', 'Rival'];
 
-    // Obtener las filas de datos (asumiendo que cada categoría tiene su fila)
     final femeninoData = _data.length > 1 ? _data[1] : [];
     final sabadosData = _data.length > 2 ? _data[2] : [];
     final domingosData = _data.length > 3 ? _data[3] : [];
@@ -405,103 +466,133 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         children: [
           const SizedBox(height: 16),
-          const Text(
-            'Próximos Partidos',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 20),
-
-          // Tarjeta Fútbol Femenino - Color rosa claro
           _buildMatchCard(
             title: 'Fútbol Femenino',
             headers: headers,
             data: femeninoData,
             backgroundColor: Colors.pink[50]!,
+            onFixturePressed: () => fetchData('femenino'),
           ),
-
           const SizedBox(height: 16),
-
-          // Tarjeta Fútbol Infantil - Sábados - Color azul claro
           _buildMatchCard(
             title: 'Fútbol Infantil - Sábados',
             headers: headers,
             data: sabadosData,
             backgroundColor: Colors.green[50]!,
+            onFixturePressed: () => fetchData('sabado'),
           ),
-
           const SizedBox(height: 16),
-
-          // Tarjeta Fútbol Infantil - Domingos - Color verde claro
           _buildMatchCard(
             title: 'Fútbol Infantil - Domingos',
             headers: headers,
             data: domingosData,
             backgroundColor: Colors.blue[50]!,
+            onFixturePressed: () => fetchData('domingo'),
           ),
-
           const SizedBox(height: 16),
         ],
       ),
     );
   }
-// Widget auxiliar para construir las tarjetas de partido
-  Widget _buildMatchCard({required String title, required List<dynamic> headers, required List<dynamic> data, Color backgroundColor = Colors.white, }) {
+
+  Widget _buildMatchCard({
+    required String title,
+    required List<dynamic> headers,
+    required List<dynamic> data,
+    Color backgroundColor = Colors.white,
+    required VoidCallback onFixturePressed,
+  }) {
     return Card(
       elevation: 4,
-      color: backgroundColor, // Aquí aplicamos el color de fondo
+      color: backgroundColor,
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFFA70000), // Color rojo similar al del header
-              ),
-              textAlign: TextAlign.center,
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFFA70000),
             ),
-            const SizedBox(height: 12),
-
-            // Encabezados
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _buildHeaderCell(headers[0].toString()),
-                _buildHeaderCell(headers[1].toString()),
-                _buildHeaderCell(headers[2].toString()),
-                _buildHeaderCell(headers[3].toString()),
-              ],
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Próximo partido',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
             ),
-
-            const Divider(height: 24, thickness: 1),
-
-            // Datos
-            if (data.isNotEmpty && data.length >= 4)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildDataCell(data[0].toString()),
-                  _buildDataCell(data[1].toString()),
-                  _buildDataCell(data[2].toString()),
-                  _buildDataCell(data[3].toString()),
-                ],
-              )
-            else
-              const Text('No hay datos disponibles',
-                style: TextStyle(color: Colors.grey),
-                textAlign: TextAlign.center,
-              ),
-          ],
+            textAlign: TextAlign.left,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildHeaderCell(headers[0].toString()),
+              _buildHeaderCell(headers[1].toString()),
+              _buildHeaderCell(headers[2].toString()),
+              _buildHeaderCell(headers[3].toString()),
+            ],
+          ),
+          const Divider(height: 24, thickness: 1),
+          if (data.isNotEmpty && data.length >= 4)
+      Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildDataCell(data[0].toString()),
+        _buildDataCell(data[1].toString()),
+        _buildDataCell(data[2].toString()),
+        _buildDataCell(data[3].toString()),
+      ],
+    )
+  else
+    const Text('No hay datos disponibles',
+      style: TextStyle(color: Colors.grey),
+      textAlign: TextAlign.center,
+    ),
+  const SizedBox(height: 16),
+  Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      ElevatedButton(
+        onPressed: onFixturePressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFa70000),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24, vertical: 12),
         ),
+        child: const Text('Fixture', style: TextStyle(color: Colors.white)),
       ),
+      ElevatedButton(
+        onPressed: () {
+          // A implementar
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 24, vertical: 12),
+          ),
+          child: const Text('Tabla', style: TextStyle(color: Colors.white)),
+      ),
+    ],
+),
+    ],
+    ),
+    ),
     );
   }
 
-// Widget auxiliar para celdas de encabezado
   Widget _buildHeaderCell(String text) {
     return Expanded(
       child: Text(
@@ -516,7 +607,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-// Widget auxiliar para celdas de datos
   Widget _buildDataCell(String text) {
     return Expanded(
       child: Text(
@@ -530,20 +620,67 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  String _getTituloPagina(String hojaActual) {
+  Widget _getTituloPagina(String hojaActual) {
     switch (hojaActual) {
       case 'home':
-        return 'Club Social y Deportivo Soler';
+        return _buildTituloClub(
+          separacion: 0.0, // Ajusta este valor a tu gusto (en píxeles)
+          colorSuperior: Colors.grey[700]!,
+          colorInferior: Colors.black,
+          sombra: [ // Personalización de sombra
+            Shadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 4,
+              offset: Offset(2, 2),
+            ),
+          ],
+        );
       case 'sabado':
-        return 'Futbol Infantil - Sabados';
+        return const Text('Futbol Infantil - Sabados');
       case 'domingo':
-        return 'Futbol Infantil - Domingos';
+        return const Text('Futbol Infantil - Domingos');
       case 'femenino':
-        return 'Futbol Femenino';
+        return const Text('Futbol Femenino');
       case 'datos':
-        return 'Proximamente - Estadisticas';
+        return const Text('Proximamente - Estadisticas');
       default:
-        return 'Club Deportivo';
+        return const Text('Club Deportivo');
     }
   }
+}
+Widget _buildTituloClub({
+  double separacion = 4.0, // Ahora puede ser negativo
+  Color colorSuperior = const Color(0xFF555555),
+  Color colorInferior = const Color(0xFFA70000),
+  List<Shadow> sombra = const [],
+}) {
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        'Club Social y Deportivo',
+        style: TextStyle(
+          fontSize: 15, // Reducido ligeramente
+          fontWeight: FontWeight.w400,
+          color: colorSuperior,
+          letterSpacing: 3.0,
+          height: 0.8, // Altura de línea compacta
+        ),
+      ),
+      SizedBox(height: separacion), // Acepta valores como -2, -4, etc.
+      Text(
+        'SOLER',
+        style: TextStyle(
+          fontSize: 72,
+          fontWeight: FontWeight.bold,
+          color: colorInferior,
+          height: 0.8, // Compacta el espacio vertical del texto
+          shadows: sombra,
+          letterSpacing: 1.0
+          ,
+        ),
+      ),
+    ],
+  );
 }
