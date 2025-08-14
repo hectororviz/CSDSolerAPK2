@@ -169,6 +169,22 @@ class _HomeScreenState extends State<HomeScreen> {
     'datos': '1599606612',
   };
 
+  Future<void> _openGoogleMaps(String lat, String long) async {
+    // Reemplazar comas por puntos para el formato correcto
+    final formattedLat = lat.replaceAll(',', '.');
+    final formattedLong = long.replaceAll(',', '.');
+
+    final url = Uri.parse("https://www.google.com/maps/search/?api=1&query=$formattedLat,$formattedLong");
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No se pudo abrir Google Maps")),
+      );
+    }
+  }
+
   List<List<dynamic>> _data = [];
   bool _loading = false;
   String hojaActual = 'home';
@@ -514,89 +530,102 @@ class _HomeScreenState extends State<HomeScreen> {
       color: backgroundColor,
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFFA70000),
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFFA70000),
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Próximo partido',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black54,
+            const SizedBox(height: 8),
+            const Text(
+              'Próximo partido',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.black54,
+              ),
+              textAlign: TextAlign.left,
             ),
-            textAlign: TextAlign.left,
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildHeaderCell(headers[0].toString()),
-              _buildHeaderCell(headers[1].toString()),
-              _buildHeaderCell(headers[2].toString()),
-              _buildHeaderCell(headers[3].toString()),
-            ],
-          ),
-          const Divider(height: 24, thickness: 1),
-          if (data.isNotEmpty && data.length >= 4)
-      Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        _buildDataCell(data[0].toString()),
-        _buildDataCell(data[1].toString()),
-        _buildDataCell(data[2].toString()),
-        _buildDataCell(data[3].toString()),
-      ],
-    )
-  else
-    const Text('No hay datos disponibles',
-      style: TextStyle(color: Colors.grey),
-      textAlign: TextAlign.center,
-    ),
-  const SizedBox(height: 16),
-  Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      ElevatedButton(
-        onPressed: onFixturePressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFa70000),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 24, vertical: 12),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildHeaderCell(headers[0].toString()),
+                _buildHeaderCell(headers[1].toString()),
+                _buildHeaderCell(headers[2].toString()),
+                _buildHeaderCell(headers[3].toString()),
+              ],
+            ),
+            const Divider(height: 24, thickness: 1),
+            if (data.isNotEmpty && data.length >= 4)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildDataCell(data[0].toString()),
+                  _buildDataCell(data[1].toString()),
+                  _buildDataCell(data[2].toString()),
+                  _buildDataCell(data[3].toString()),
+                ],
+              )
+            else
+              const Text('No hay datos disponibles',
+                style: TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Distribución equitativa
+              children: [
+                // Botón Fixture
+                ElevatedButton(
+                  onPressed: onFixturePressed,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFa70000),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10), // Ajustado para mejor espacio
+                  ),
+                  child: const Text('Fixture', style: TextStyle(color: Colors.white)),
+                ),
+
+                // Botón Mapa (solo si hay coordenadas)
+                if (data.length >= 6 && data[4].toString().isNotEmpty && data[5].toString().isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.location_on, size: 36),
+                    color: Colors.blue[700],
+                    onPressed: () => _openGoogleMaps(data[4].toString(), data[5].toString()),
+                  )
+                else
+                  const SizedBox(width: 48), // Espacio reservado si no hay mapa
+
+                // Botón Tabla
+                ElevatedButton(
+                  onPressed: () {
+                    // A implementar
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10), // Ajustado para mejor espacio
+                  ),
+                  child: const Text('Tabla', style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            ),
+          ],
         ),
-        child: const Text('Fixture', style: TextStyle(color: Colors.white)),
       ),
-      ElevatedButton(
-        onPressed: () {
-          // A implementar
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 24, vertical: 12),
-          ),
-          child: const Text('Tabla', style: TextStyle(color: Colors.white)),
-      ),
-    ],
-),
-    ],
-    ),
-    ),
     );
   }
 

@@ -37,6 +37,15 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
+        <!-- Permite abrir URLs HTTPS (Google Maps) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <!-- Opcional: Permite detectar si está instalada la app de Google Maps -->
+        <package android:name="com.google.android.apps.maps" />
+    </queries>
+    <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
