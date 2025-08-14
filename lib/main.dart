@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:csv/csv.dart';
 import 'dart:math' as math;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const MyApp());
