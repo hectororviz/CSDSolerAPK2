@@ -3,6 +3,7 @@ import 'custom_header.dart';
 import 'fixture_page.dart';
 import 'femenino_tables_screen.dart';
 import 'domingo_tables_screen.dart';
+import 'sabado_tables_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'google_sheet_service.dart';
 
@@ -222,19 +223,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 ElevatedButton(
                   onPressed: title.contains('Femenino')
                       ? () =>
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const FemeninoTablesScreen()),
-                      )
-                      : title.contains('Domingos')
-                      ? () =>
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const DomingoTablesScreen()),
-                      )
-                      : null,
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const FemeninoTablesScreen()),
+                          )
+                      : title.contains('Sábados')
+                          ? () =>
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const SabadoTablesScreen()),
+                              )
+                          : title.contains('Domingos')
+                              ? () =>
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const DomingoTablesScreen()),
+                                  )
+                              : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     shape: RoundedRectangleBorder(
