@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'custom_header.dart';
 import 'fixture_page.dart';
 import 'femenino_tables_screen.dart';
+import 'domingo_tables_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'google_sheet_service.dart';
 
@@ -226,7 +227,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         MaterialPageRoute(
                             builder: (context) => const FemeninoTablesScreen()),
                       )
-                      : null, // Deshabilitar para otras categorías por ahora
+                      : title.contains('Domingos')
+                      ? () =>
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const DomingoTablesScreen()),
+                      )
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     shape: RoundedRectangleBorder(
