@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:csv/csv.dart';
 import 'custom_header.dart';
 import 'fixture_page.dart';
 import 'femenino_tables_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'google_sheet_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,15 +27,11 @@ class _HomeScreenState extends State<HomeScreen> {
       _loading = true;
     });
 
-    const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTH5wcJur5ysIqKDdpaRP3M1YDAXVME5Ztuo0zffL27P9crNqlDlbNp3Kg-DSOE9XapLGl9qwUO1hrZ/pub?gid=970777381&output=csv';
-
     try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        setState(() {
-          _data = const CsvToListConverter().convert(response.body);
-        });
-      }
+      final data = await GoogleSheetService.fetchSheet('970777381');
+      setState(() {
+        _data = data;
+      });
     } catch (e) {
       // Manejo de errores
     }

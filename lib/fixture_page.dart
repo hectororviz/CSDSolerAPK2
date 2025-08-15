@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:csv/csv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'custom_header.dart';
 import 'dart:math' as math;
+import 'google_sheet_service.dart';
 
 class FixturePage extends StatefulWidget {
   final String hoja;
@@ -27,16 +26,11 @@ class _FixturePageState extends State<FixturePage> {
   Future<void> _loadData() async {
     try {
       final gid = _getGidForHoja(widget.hoja);
-      final url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTH5wcJur5ysIqKDdpaRP3M1YDAXVME5Ztuo0zffL27P9crNqlDlbNp3Kg-DSOE9XapLGl9qwUO1hrZ/pub?gid=$gid&output=csv';
-
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        setState(() {
-          _data = const CsvToListConverter().convert(response.body);
-          _loading = false;
-        });
-      }
+      final data = await GoogleSheetService.fetchSheet(gid);
+      setState(() {
+        _data = data;
+        _loading = false;
+      });
     } catch (e) {
       setState(() {
         _loading = false;

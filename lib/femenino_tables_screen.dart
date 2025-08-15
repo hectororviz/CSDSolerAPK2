@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:csv/csv.dart';
 import 'dart:math' as math;
 //import 'package:google_fonts/google_fonts.dart';
 import 'custom_header.dart';
+import 'google_sheet_service.dart';
 
 class FemeninoTablesScreen extends StatefulWidget {
   const FemeninoTablesScreen({super.key});
@@ -41,16 +40,10 @@ class _FemeninoTablesScreenState extends State<FemeninoTablesScreen> {
       for (var entry in tablesGid.entries) {
         final tableName = entry.key;
         final gid = entry.value;
-        final url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTH5wcJur5ysIqKDdpaRP3M1YDAXVME5Ztuo0zffL27P9crNqlDlbNp3Kg-DSOE9XapLGl9qwUO1hrZ/pub?gid=$gid&output=csv';
-
-        final response = await http.get(Uri.parse(url));
-
-        if (response.statusCode == 200) {
-          final csvData = const CsvToListConverter().convert(response.body);
-          setState(() {
-            _tablesData[tableName] = csvData;
-          });
-        }
+        final data = await GoogleSheetService.fetchSheet(gid);
+        setState(() {
+          _tablesData[tableName] = data;
+        });
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
