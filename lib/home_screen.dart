@@ -48,20 +48,21 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 30, 16, 8),
-            child: HomeHeader(),
-          ),
-          Expanded(
-            child: _loading
+      body: RefreshIndicator(
+        onRefresh: _loadHomeData,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 30, 16, 8),
+              child: HomeHeader(),
+            ),
+            _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _buildHomeContent(),
-          ),
-        ],
+          ],
+        ),
       ),
-
     );
   }
 
@@ -78,52 +79,50 @@ class _HomeScreenState extends State<HomeScreen> {
     final sabadosData = _data.length > 2 ? _data[2] : [];
     final domingosData = _data.length > 3 ? _data[3] : [];
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          const SizedBox(height: 16),
-          _buildMatchCard(
-            title: 'Fútbol Femenino',
-            headers: headers,
-            data: femeninoData,
-            backgroundColor: Colors.pink[50]!,
-            onFixturePressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const FixturePage(hoja: 'femenino'),
-              ),
+    return Column(
+      children: [
+        const SizedBox(height: 16),
+        _buildMatchCard(
+          title: 'Fútbol Femenino',
+          headers: headers,
+          data: femeninoData,
+          backgroundColor: Colors.pink[50]!,
+          onFixturePressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const FixturePage(hoja: 'femenino'),
             ),
           ),
-          const SizedBox(height: 16),
-          _buildMatchCard(
-            title: 'Fútbol Infantil - Sábados',
-            headers: headers,
-            data: sabadosData,
-            backgroundColor: Colors.green[50]!,
-            onFixturePressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const FixturePage(hoja: 'sabado'),
-              ),
+        ),
+        const SizedBox(height: 16),
+        _buildMatchCard(
+          title: 'Fútbol Infantil - Sábados',
+          headers: headers,
+          data: sabadosData,
+          backgroundColor: Colors.green[50]!,
+          onFixturePressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const FixturePage(hoja: 'sabado'),
             ),
           ),
-          const SizedBox(height: 16),
-          _buildMatchCard(
-            title: 'Fútbol Infantil - Domingos',
-            headers: headers,
-            data: domingosData,
-            backgroundColor: Colors.blue[50]!,
-            onFixturePressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const FixturePage(hoja: 'domingo'),
-              ),
+        ),
+        const SizedBox(height: 16),
+        _buildMatchCard(
+          title: 'Fútbol Infantil - Domingos',
+          headers: headers,
+          data: domingosData,
+          backgroundColor: Colors.blue[50]!,
+          onFixturePressed: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const FixturePage(hoja: 'domingo'),
             ),
           ),
-          const SizedBox(height: 16),
-          _buildSocialButtons(),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        _buildSocialButtons(),
+      ],
     );
   }
 
