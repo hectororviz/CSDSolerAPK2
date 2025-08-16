@@ -4,7 +4,9 @@ import 'fixture_page.dart';
 import 'femenino_tables_screen.dart';
 import 'domingo_tables_screen.dart';
 import 'sabado_tables_screen.dart';
+import 'about_page.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'google_sheet_service.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -118,6 +120,43 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(height: 16),
+          _buildSocialButtons(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSocialButtons() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              IconButton(
+                icon: const FaIcon(FontAwesomeIcons.instagram),
+                color: Colors.pink,
+                onPressed: () => _launchExternalUrl(
+                    'https://www.instagram.com/csd_soler/'),
+              ),
+              IconButton(
+                icon: const FaIcon(FontAwesomeIcons.facebook),
+                color: Colors.blue[700],
+                onPressed: () => _launchExternalUrl(
+                    'https://www.facebook.com/profile.php?id=100078080747592'),
+              ),
+            ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AboutPage(),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -307,6 +346,13 @@ class _HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("No se pudo abrir Google Maps")),
       );
+    }
+  }
+
+  Future<void> _launchExternalUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 }
