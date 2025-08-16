@@ -13,7 +13,7 @@ class DomingoTablesScreen extends StatefulWidget {
 
 class _DomingoTablesScreenState extends State<DomingoTablesScreen> {
   final Map<String, String> tablesGid = {
-    'General D': '1374959447',
+    'General': '1374959447',
     '2010': '1995683667',
     '2011': '1112937965',
     '2012': '498160849',

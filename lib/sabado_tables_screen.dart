@@ -12,7 +12,7 @@ class SabadoTablesScreen extends StatefulWidget {
 
 class _SabadoTablesScreenState extends State<SabadoTablesScreen> {
   final Map<String, String> tablesGid = {
-    'General S': '1086960525',
+    'General': '1086960525',
     '2011': '1413392283',
     '2012': '1861449798',
     '2013': '1090489169',

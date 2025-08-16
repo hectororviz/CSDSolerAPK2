@@ -4,9 +4,9 @@ import 'custom_header.dart';
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
-  static const double escudoScale = 1.0;
+  static const double escudoScale = 0.5;
   static const double paragraphSpacing = 16.0;
-  static const double footerSpacing = 24.0;
+  static const double footerSpacing = 32.0;
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +14,7 @@ class AboutPage extends StatelessWidget {
       appBar: RedAppBar(title: 'Acerca de', context: context),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -22,7 +22,7 @@ class AboutPage extends StatelessWidget {
                 scale: escudoScale,
                 child: Image.asset('assets/escudo.png'),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 0),
               const Text(
                 'Club Social y Deportivo Soler de Ing. Pablo Nogues A.C.',
                 textAlign: TextAlign.center,
@@ -30,12 +30,12 @@ class AboutPage extends StatelessWidget {
               ),
               SizedBox(height: paragraphSpacing),
               const Text(
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+                'En este pequeño club, que forman parte más de 140 chicos y chicas de entre 6 y 16 años que disfrutan del fútbol infantil y femenino, crecemos paso a paso, con el sueño de ofrecer un lugar donde cada uno aprenda, comparta y se sienta parte de una gran familia que late al ritmo del fútbol..',
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: footerSpacing),
               const Text(
-                'Nombre del desarrollador\ncorreo@example.com\n2024',
+                'hector.h.orviz@gmail.com - 2025',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12),
               ),
