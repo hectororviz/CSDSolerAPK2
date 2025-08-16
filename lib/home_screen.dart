@@ -8,7 +8,6 @@ import 'about_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'google_sheet_service.dart';
-import 'theme_notifier.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -57,23 +56,6 @@ class _HomeScreenState extends State<HomeScreen> {
             const Padding(
               padding: EdgeInsets.fromLTRB(16, 30, 16, 8),
               child: HomeHeader(),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: ValueListenableBuilder<ThemeMode>(
-                valueListenable: themeNotifier,
-                builder: (context, mode, _) {
-                  return SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Modo oscuro'),
-                    value: mode == ThemeMode.dark,
-                    onChanged: (val) {
-                      themeNotifier.updateThemeMode(
-                          val ? ThemeMode.dark : ThemeMode.light);
-                    },
-                  );
-                },
-              ),
             ),
             _loading
                 ? const Center(child: CircularProgressIndicator())
