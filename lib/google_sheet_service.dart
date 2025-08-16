@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GoogleSheetService {
   GoogleSheetService._();
@@ -9,6 +10,9 @@ class GoogleSheetService {
 
   static final Map<String, List<List<dynamic>>> _cache = {};
   static Map<String, dynamic>? _jsonData;
+  static const _cacheKey = 'sheet_cache';
+  static const _timestampKey = 'sheet_cache_timestamp';
+  static const _cacheDuration = Duration(hours: 1);
 
   static const Map<String, String> _gidToKey = {
     '970777381': 'home',
@@ -55,14 +59,7 @@ class GoogleSheetService {
       throw Exception('No data mapping for gid: $gid');
     }
 
-    if (_jsonData == null) {
-      final response = await http.get(Uri.parse(_dataUrl));
-      if (response.statusCode != 200) {
-        throw Exception('Failed to fetch data');
-      }
-      final decoded = json.decode(response.body) as Map<String, dynamic>;
-      _jsonData = decoded['data'] as Map<String, dynamic>;
-    }
+    await _ensureData();
 
     final section = _jsonData![key] as List<dynamic>?;
     if (section == null || section.isEmpty) {
@@ -79,5 +76,45 @@ class GoogleSheetService {
 
     _cache[gid] = rows;
     return rows;
+  }
+
+  static Future<void> _ensureData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    final cached = prefs.getString(_cacheKey);
+    final ts = prefs.getInt(_timestampKey);
+    final cachedTime = ts != null
+        ? DateTime.fromMillisecondsSinceEpoch(ts)
+        : DateTime.fromMillisecondsSinceEpoch(0);
+    final hasFreshCache =
+        cached != null && now.difference(cachedTime) < _cacheDuration;
+
+    if (_jsonData == null && hasFreshCache) {
+      _jsonData = json.decode(cached!) as Map<String, dynamic>;
+    }
+
+    if (_jsonData == null || !hasFreshCache) {
+      try {
+        final response = await http.get(Uri.parse(_dataUrl));
+        if (response.statusCode == 200) {
+          final decoded = json.decode(response.body) as Map<String, dynamic>;
+          _jsonData = decoded['data'] as Map<String, dynamic>;
+          _cache.clear();
+          await prefs.setString(_cacheKey, json.encode(_jsonData));
+          await prefs.setInt(_timestampKey, now.millisecondsSinceEpoch);
+          return;
+        }
+      } catch (_) {
+        // ignore and fallback to cache if available
+      }
+
+      if (_jsonData == null) {
+        if (cached != null) {
+          _jsonData = json.decode(cached) as Map<String, dynamic>;
+        } else {
+          throw Exception('Failed to fetch data');
+        }
+      }
+    }
   }
 }
