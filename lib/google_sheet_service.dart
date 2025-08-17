@@ -12,6 +12,7 @@ class GoogleSheetService {
   static Map<String, dynamic>? _jsonData;
   static const _cacheKey = 'sheet_cache';
   static const _timestampKey = 'sheet_cache_timestamp';
+  static const _generatedAtKey = 'sheet_cache_generated_at';
   static const _cacheDuration = Duration(hours: 1);
 
   static const Map<String, String> _gidToKey = {
@@ -83,11 +84,12 @@ class GoogleSheetService {
     final now = DateTime.now();
     final cached = prefs.getString(_cacheKey);
     final ts = prefs.getInt(_timestampKey);
+    final cachedGeneratedAt = prefs.getString(_generatedAtKey);
     final cachedTime = ts != null
         ? DateTime.fromMillisecondsSinceEpoch(ts)
         : DateTime.fromMillisecondsSinceEpoch(0);
     final hasFreshCache =
-        cached != null && now.difference(cachedTime) < _cacheDuration;
+        cached != null && cachedGeneratedAt != null && now.difference(cachedTime) < _cacheDuration;
 
     if (_jsonData == null && hasFreshCache) {
       _jsonData = json.decode(cached!) as Map<String, dynamic>;
@@ -98,18 +100,30 @@ class GoogleSheetService {
         final response = await http.get(Uri.parse(_dataUrl));
         if (response.statusCode == 200) {
           final decoded = json.decode(response.body) as Map<String, dynamic>;
-          _jsonData = decoded['data'] as Map<String, dynamic>;
-          _cache.clear();
-          await prefs.setString(_cacheKey, json.encode(_jsonData));
-          await prefs.setInt(_timestampKey, now.millisecondsSinceEpoch);
-          return;
+          final generatedAt =
+              (decoded['_meta'] as Map<String, dynamic>?)?['generated_at']
+                  ?.toString();
+          final data = decoded['data'] as Map<String, dynamic>;
+
+          if (generatedAt != null) {
+            if (generatedAt != cachedGeneratedAt) {
+              _cache.clear();
+              await prefs.setString(_cacheKey, json.encode(data));
+              await prefs.setString(_generatedAtKey, generatedAt);
+            } else if (cached == null) {
+              await prefs.setString(_cacheKey, json.encode(data));
+            }
+            await prefs.setInt(_timestampKey, now.millisecondsSinceEpoch);
+            _jsonData = data;
+            return;
+          }
         }
       } catch (_) {
         // ignore and fallback to cache if available
       }
 
       if (_jsonData == null) {
-        if (cached != null) {
+        if (cached != null && cachedGeneratedAt != null) {
           _jsonData = json.decode(cached) as Map<String, dynamic>;
         } else {
           throw Exception('Failed to fetch data');
