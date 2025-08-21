@@ -8,6 +8,7 @@ import 'about_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'google_sheet_service.dart';
+import 'match_widget_updater.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -36,6 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _data = data;
       });
+      await MatchWidgetUpdater.updateMatches(data);
     } catch (e) {
       // Manejo de errores
     }

@@ -1,5 +1,5 @@
 package com.example.csdsolerapk
 
-import io.flutter.embedding.android.FlutterActivity
+import es.antonborri.home_widget.HomeWidgetActivity
 
-class MainActivity : FlutterActivity()
+class MainActivity : HomeWidgetActivity()
